@@ -4,15 +4,15 @@ class ImageCreator:
     self.nz = 1568 # Samples in Z direction 
     self.ny = 255 # Samples in Y direction 
 
-    self.dz = 29.5E-3/nz # Z step (m)
-    self.dy= 38E-3/ny # Y step (m)
+    self.dz = 29.5E-3/self.nz # Z step (m)
+    self.dy= 38E-3/self.ny # Y step (m)
 
     self.rho = 1e3 # Density of sample (kg/m^3)
     self.nu=0.49 # Poisson's Ratio (0.49)
     self.E=10000
     self.h=5E-3
-    self.lam=E*nu/(1+nu)/(1-2*nu) # lambda Lame parameter (Pa)
-    self.mu=E/2/(1+nu) # mu (shear modulus) Lame parameter (Pa)
+    self.lam=self.E*self.nu/(1+self.nu)/(1-2*self.nu) # lambda Lame parameter (Pa)
+    self.mu=self.E/2/(1+self.nu) # mu (shear modulus) Lame parameter (Pa)
 
     self.sy=100E-3 # full lateral extent of sample in (m)
     self.sz=80E-3 # full axial extent of sample in (m)
