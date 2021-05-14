@@ -1,4 +1,4 @@
-class ImageCreator
+class ImageCreator:
   def __init__(self):
     # Define all universal parameters
     self.nz = 1568 # Samples in Z direction 
