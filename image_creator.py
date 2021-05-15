@@ -24,7 +24,10 @@ class ImageCreator:
     self.bmlefty=15.026E-3 # left surface of inclusion from the left boundary of B-mode in (m)
     self.bmrighty =25.026E-3 # right surface of inclusion from the left boundary of B-mode in (m)
     self.slefty=45E-3 # location of left surface of inclusion from left boundary of sample in (m)
+
+    self.leftexcess=round((self.slefty-self.bmlefty)/self.dy)
     
 
   def generate_displacement(self):
     print('testing:', self.dz)
+    print('left excess:', self.leftexcess)
