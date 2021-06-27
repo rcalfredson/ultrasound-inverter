@@ -1,5 +1,9 @@
+import numpy as np
+from kernel_gen import kernel_gen
+
+
 class ImageCreator:
-    def __init__(self):
+    def __init__(self, bc):
         # Define all universal parameters
         self.nz = 1568  # Samples in Z direction
         self.ny = 255  # Samples in Y direction
@@ -28,7 +32,31 @@ class ImageCreator:
         self.slefty = 45e-3  # location of left surface of inclusion from left boundary of sample in (m)
 
         self.leftexcess = round((self.slefty - self.bmlefty) / self.dy)
+        self.top = round(self.topz / self.dz)
+        self.bot = round(self.botz / self.dz)
+        self.left = round(self.bmlefty / self.dy)
+        self.right = round(self.bmrighty / self.dy)
+        self.incl_mask = np.zeros((self.nz, self.ny))
+        self.incl_mask[self.top : self.bot, self.left : self.right] = 1
+
+        self.bc = bc
+        self.set_bcs()
+
+    def set_bcs(self):
+        if self.bc == 0:
+            self.wts = np.ones(self.incl_mask.shape)
 
     def generate_displacement(self):
         print("testing:", self.dz)
         print("left excess:", self.leftexcess)
+        K = kernel_gen(
+            self.nz * 4,
+            self.ny * 2,
+            self.dz,
+            self.dy,
+            self.h,
+            self.lam,
+            self.mu,
+            self.rho,
+        )
+
