@@ -4,7 +4,7 @@ import numpy as np
 def kernel_gen(nz, ny, dz, dy, h, lam, mu, rho):
     kzstep = 1 / (nz * dz)
     kystep = 1 / (ny * dy)
-    kz, ky = np.meshgrid([1, 2], [1, 2], indexing="ij")
+    kz, ky = np.meshgrid(np.arange(-nz/2, nz/2)*kzstep, np.arange(-ny/2, ny/2)*kystep, indexing="ij")
     kpar = np.sqrt(np.power(kz, 2) + np.power(ky, 2))
     kpar = np.maximum(kpar, 0.5 * np.maximum(kzstep, kystep))
     K = np.multiply(

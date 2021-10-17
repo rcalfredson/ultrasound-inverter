@@ -1,3 +1,4 @@
+from convodduni import convodduni
 import numpy as np
 from kernel_gen import kernel_gen
 
@@ -59,4 +60,13 @@ class ImageCreator:
             self.mu,
             self.rho,
         )
+        print('kernel shape:', K.shape)
+        def forward_op(x):
+            return self.wts*convodduni(x, K)
 
+        simdfield = forward_op(self.incl_mask)
+        snr = 5
+        rand_noise = np.random.normal(size=simdfield.shape)
+        noise_level = 10**(-snr/20)*np.sqrt(np.sum(np.power(np.abs(simdfield), 2))/simdfield.size)
+        simdfield = simdfield + rand_noise*noise_level
+        self.simdfield = simdfield
