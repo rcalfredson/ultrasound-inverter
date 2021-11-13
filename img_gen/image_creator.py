@@ -1,6 +1,6 @@
-from convodduni import convodduni
+from img_gen.convodduni import convodduni
+from img_gen.kernel_gen import kernel_gen
 import numpy as np
-from kernel_gen import kernel_gen
 
 
 class ImageCreator:

@@ -1,7 +1,7 @@
 import argparse
 import numpy as np
 import os
-from image_creator import ImageCreator
+from img_gen.image_creator import ImageCreator
 from matplotlib import pyplot as plt
 
 
