@@ -255,11 +255,12 @@ def train(d_model, g_model, gan_model, dataset, n_epochs=100, n_batch=1):
         # update the generator
         g_loss, _, _ = gan_model.train_on_batch(X_realA, [y_real, X_realB])
         # summarize performance
-        print(">%d, d1[%.3f] d2[%.3f] g[%.3f]" % (i + 1, d_loss1, d_loss2, g_loss))
         # summarize model performance
         if (i + 1) % (bat_per_epo * 10) == 0:
             summarize_performance(i, g_model, dataset)
-        print("Step duration:", timeit.default_timer() - start_t)
+        if i % 100 == 0:
+          print(">%d, d1[%.3f] d2[%.3f] g[%.3f]" % (i + 1, d_loss1, d_loss2, g_loss))
+          print("Step duration:", timeit.default_timer() - start_t)
 
 
 # load image data
