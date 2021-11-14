@@ -1,5 +1,7 @@
 # example of pix2pix gan for satellite to map image-to-image translation
 import argparse
+import os
+import timeit
 from numpy import load
 from numpy import zeros
 from numpy import ones
@@ -20,6 +22,7 @@ from matplotlib import pyplot
 
 p = argparse.ArgumentParser(description='Run a GAN training for the ultrasound inverter')
 p.add_argument('data_src', help='path to the compressed Numpy file of training data')
+p.add_argument('dest', help='folder to which to write results')
 opts = p.parse_args()
 
 # define the discriminator model
@@ -117,7 +120,7 @@ def define_generator(image_shape=(256,256,3)):
 	d6 = decoder_block(d5, e2, 128, dropout=False)
 	d7 = decoder_block(d6, e1, 64, dropout=False)
 	# output
-	g = Conv2DTranspose(3, (4,4), strides=(2,2), padding='same', kernel_initializer=init)(d7)
+	g = Conv2DTranspose(1, (4,4), strides=(2,2), padding='same', kernel_initializer=init)(d7)
 	out_image = Activation('tanh')(g)
 	# define model
 	model = Model(in_image, out_image)
@@ -199,11 +202,11 @@ def summarize_performance(step, g_model, dataset, n_samples=3):
 		pyplot.axis('off')
 		pyplot.imshow(X_realB[i])
 	# save plot to file
-	filename1 = 'plot_%06d.png' % (step+1)
+	filename1 = os.path.join(opts.dest, 'plot_%06d.png' % (step+1))
 	pyplot.savefig(filename1)
 	pyplot.close()
 	# save the generator model
-	filename2 = 'model_%06d.h5' % (step+1)
+	filename2 = os.path.join(opts.dest, 'model_%06d.h5' % (step+1))
 	g_model.save(filename2)
 	print('>Saved: %s and %s' % (filename1, filename2))
 
@@ -219,6 +222,7 @@ def train(d_model, g_model, gan_model, dataset, n_epochs=100, n_batch=1):
 	n_steps = bat_per_epo * n_epochs
 	# manually enumerate epochs
 	for i in range(n_steps):
+		start_t = timeit.default_timer()
 		# select a batch of real samples
 		[X_realA, X_realB], y_real = generate_real_samples(dataset, n_batch, n_patch)
 		# generate a batch of fake samples
@@ -234,12 +238,13 @@ def train(d_model, g_model, gan_model, dataset, n_epochs=100, n_batch=1):
 		# summarize model performance
 		if (i+1) % (bat_per_epo * 10) == 0:
 			summarize_performance(i, g_model, dataset)
+		print('Step duration:', timeit.default_timer() - start_t)
 
 # load image data
 dataset = load_real_samples(opts.data_src)
 print('Loaded', dataset[0].shape, dataset[1].shape)
 # define input shape based on the loaded dataset
-image_shape = dataset[0].shape[1:]
+image_shape = dataset[0].shape[1:] + (1,)
 # define the models
 d_model = define_discriminator(image_shape)
 g_model = define_generator(image_shape)
