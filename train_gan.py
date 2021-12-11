@@ -10,6 +10,7 @@ from tensorflow.keras.optimizers import Adam
 from keras.initializers import RandomNormal
 from keras.models import Model
 from keras.models import Input
+from keras.models import load_model
 from keras.layers import Conv2D
 from keras.layers import Conv2DTranspose
 from keras.layers import LeakyReLU
@@ -21,10 +22,35 @@ from keras.layers import LeakyReLU
 from matplotlib import pyplot
 
 p = argparse.ArgumentParser(
-    description="Run a GAN training for the ultrasound inverter"
+    description="Run a GAN training for the ultrasound inverter",
+    formatter_class=argparse.ArgumentDefaultsHelpFormatter,
 )
 p.add_argument("data_src", help="path to the compressed Numpy file of training data")
 p.add_argument("dest", help="folder to which to write results")
+p.add_argument(
+    "--starting_model",
+    metavar="model.pth",
+    help="path to model from which to start the training",
+)
+p.add_argument(
+    "--n_epochs",
+    help="number of epochs to run the training for",
+    type=int,
+    default=100,
+    metavar="N",
+)
+p.add_argument(
+    "--n_steps_completed",
+    type=int,
+    metavar="N",
+    help="number of steps the model has already been trained for."
+    " If --starting_model is specified, then this argument defaults to zero."
+    " If --starting_model is unspecified, then this argument is ignored."
+    " Note: this doesn't affect how many epochs the model trains for, and"
+    " is just used in the filenames of exported artifacts, which note the total"
+    " steps of training.",
+    default=0,
+)
 opts = p.parse_args()
 
 # define the discriminator model
@@ -215,7 +241,7 @@ def summarize_performance(step, g_model, dataset, n_samples=3):
     for i in range(n_samples):
         pyplot.subplot(3, n_samples, 1 + n_samples + i)
         pyplot.axis("off")
-        pyplot.imshow(X_fakeB[i])
+        pyplot.imshow(X_fakeB[i].squeeze())
     # plot real target image
     for i in range(n_samples):
         pyplot.subplot(3, n_samples, 1 + n_samples * 2 + i)
@@ -232,7 +258,9 @@ def summarize_performance(step, g_model, dataset, n_samples=3):
 
 
 # train pix2pix models
-def train(d_model, g_model, gan_model, dataset, n_epochs=100, n_batch=1):
+def train(
+    d_model, g_model, gan_model, dataset, n_epochs=100, n_batch=1, n_steps_completed=0
+):
     # determine the output square shape of the discriminator
     n_patch = d_model.output_shape[1]
     # unpack dataset
@@ -257,10 +285,13 @@ def train(d_model, g_model, gan_model, dataset, n_epochs=100, n_batch=1):
         # summarize performance
         # summarize model performance
         if (i + 1) % (bat_per_epo * 10) == 0:
-            summarize_performance(i, g_model, dataset)
+            summarize_performance(n_steps_completed + i, g_model, dataset)
         if i % 100 == 0:
-          print(">%d, d1[%.3f] d2[%.3f] g[%.3f]" % (i + 1, d_loss1, d_loss2, g_loss))
-          print("Step duration:", timeit.default_timer() - start_t)
+            print(
+                ">%d, d1[%.3f] d2[%.3f] g[%.3f]"
+                % (n_steps_completed + i + 1, d_loss1, d_loss2, g_loss)
+            )
+            print("Step duration:", timeit.default_timer() - start_t)
 
 
 # load image data
@@ -270,8 +301,19 @@ print("Loaded", dataset[0].shape, dataset[1].shape)
 image_shape = dataset[0].shape[1:] + (1,)
 # define the models
 d_model = define_discriminator(image_shape)
-g_model = define_generator(image_shape)
+if opts.starting_model is not None:
+    g_model = load_model(opts.starting_model)
+else:
+    g_model = define_generator(image_shape)
 # define the composite model
 gan_model = define_gan(g_model, d_model, image_shape)
 # train model
-train(d_model, g_model, gan_model, dataset)
+train(
+    d_model,
+    g_model,
+    gan_model,
+    dataset,
+    n_epochs=opts.n_epochs,
+    n_steps_completed=opts.n_steps_completed,
+)
+
